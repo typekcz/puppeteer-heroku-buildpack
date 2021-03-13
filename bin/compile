@@ -31,25 +31,44 @@ function indent() {
   esac
 }
 
-PACKAGES="gconf-service libasound2 libatk1.0-0 libatk-bridge2.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libcairo-gobject2 libxinerama1 libgtk2.0-0 libpangoft2-1.0-0 libthai0 libpixman-1-0 libxcb-render0 libharfbuzz0b libdatrie1 libgraphite2-3 chromium-browser chromium-codecs-ffmpeg-extra"
+# Store which STACK we are running on in the cache to bust the cache if it changes
+if [ -f $CACHE_DIR/.apt/STACK ]; then
+  CACHED_STACK=$(cat "$CACHE_DIR/.apt/STACK")
+else
+  CACHED_STACK=$STACK
+fi
+
+# Ensure we store the STACK in the cache for next time.
+mkdir -p "$CACHE_DIR/.apt"
+echo "$STACK" > "$CACHE_DIR/.apt/STACK"
 
 APT_CACHE_DIR="$CACHE_DIR/apt/cache"
 APT_STATE_DIR="$CACHE_DIR/apt/state"
 
+if [ $CACHED_STACK == $STACK ]; then
+  # STACK has not changed
+  topic "Reusing cache"
+else
+  # STACK changed
+  topic "Detected Stack changes, flushing cache"
+  rm -rf $APT_CACHE_DIR
+fi
+
 mkdir -p "$APT_CACHE_DIR/archives/partial"
 mkdir -p "$APT_STATE_DIR/lists/partial"
 
+PACKAGES="gconf-service libasound2 libatk1.0-0 libatk-bridge2.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libcairo-gobject2 libxinerama1 libgtk2.0-0 libpangoft2-1.0-0 libthai0 libpixman-1-0 libxcb-render0 libharfbuzz0b libdatrie1 libgraphite2-3 libgbm1 chromium-browser chromium-codecs-ffmpeg-extra"
 APT_OPTIONS="-o debug::nolocking=true -o dir::cache=$APT_CACHE_DIR -o dir::state=$APT_STATE_DIR"
 
 case "$STACK" in
   "cedar-14")
     APT_FLAGS="--force-yes"
     ;;
-  "heroku-16" | "heroku-18")
+  "heroku-16" | "heroku-18" | "heroku-20")
     APT_FLAGS="--allow-downgrades --allow-remove-essential --allow-change-held-packages"
     ;;
   *)
-    error "STACK must be 'cedar-14', 'heroku-16', or 'heroku-18'"
+    error "STACK must be 'cedar-14', 'heroku-16', 'heroku-18', or 'heroku-20'"
 esac
 
 topic "Updating apt caches"
