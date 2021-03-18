@@ -172,5 +172,5 @@ BIN_DIR=$BUILD_DIR/.apt/usr/bin
 # about the non-standard location
 cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=
-export PUPPETEER_EXECUTABLE_PATH="\$HOME/.apt/usr/lib/chromium-browser/chromium-browser"
+export PUPPETEER_EXECUTABLE_PATH="\$HOME/.apt/usr/bin/chromium-browser"
 EOF
